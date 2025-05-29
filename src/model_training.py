@@ -41,11 +41,8 @@ def train_model(model_name, x_train, y_train, x_val, y_val, random_state=42):
             'kernel': ['rbf', 'linear'],
             'gamma': ['scale', 'auto']
         }
-        # SVC est très lent, réduisez n_iter et cv pour les tests
-        n_iter = 5  # Très peu d'itérations pour l'exemple
-        print("AVERTISSEMENT: SVC est très gourmand en calcul, n_iter est réduit à 5 pour des tests rapides.")
-        print("Considérez de réduire la taille de X_train pour SVC si le temps est un problème.")
 
+        n_iter = 5
 
     elif model_name == 'MLPClassifier':
         estimator = MLPClassifier(random_state=random_state, max_iter=500)
@@ -58,28 +55,28 @@ def train_model(model_name, x_train, y_train, x_val, y_val, random_state=42):
         }
         n_iter = 10
 
-    # Instancier RandomizedSearchCV
+    # utilisation de RandomizedSearchCV pour optimiser les hyperparamètres
     random_search = RandomizedSearchCV(
         estimator=estimator,
         param_distributions=param_distributions,
-        n_iter=n_iter,  # Nombre d'itérations aléatoires (plus élevé=plus complet)
-        scoring='roc_auc',  # Mesure d'évaluation
-        cv=3,  # Validation croisée avec 3 plis
-        verbose=2,  # Affichage progrès de recherche
+        n_iter=n_iter,
+        scoring='roc_auc',
+        cv=3,
+        verbose=2,
         random_state=42,
-        n_jobs=-1  # Utiliser tous les CPU disponibles
+        n_jobs=-1
     )
 
     print("Démarrage de la recherche aléatoire pour les hyperparamètres du modèle:", model_name)
 
-    # Lancer la recherche sur vos données réséchantillonnées
+    # Lancer la recherche sur les données ré-échantillonnées
     random_search.fit(x_train, y_train)
 
     print(f"Meilleurs paramètres pour {model_name}:", random_search.best_params_)
     print(f"Meilleure performance (AUC) pour {model_name} (CV):", random_search.best_score_)
 
     # Entraîner le modèle final avec les meilleurs paramètres
-    final_model = random_search.best_estimator_  # best_estimator_ est le modèle déjà entraîné avec les meilleurs paramètres
+    final_model = random_search.best_estimator_
 
     # Évaluation sur les données de validation
     predictions_val = final_model.predict(x_val)

@@ -6,30 +6,28 @@ from sklearn.metrics import confusion_matrix, classification_report, roc_auc_sco
 def main():
     print("Démarrage du pipeline de détection de fraude...\n")
 
-    # --- Phase 1: Chargement et prétraitement des données ---
+    # Loading and preprocessing data
     df = load_data()
     x_train_resampled, y_train_resampled, x_val, y_val = preprocess_data(df)
 
-    # --- Phase 2: Entraînement et évaluation des modèles ---
-
-    # Liste des modèles à entraîner. Décommentez/commentez pour choisir.
     models_to_train = [
         'XGBoost',
         'RandomForest',
-        # 'SVC',         # SVC est très lent, décommentez avec prudence ou sur un échantillon réduit
+        # 'SVC',
+        # Not yet trained since it is long to train
          'MLPClassifier'
     ]
 
     trained_models = {}
 
     for model_name in models_to_train:
-        # Tenter d'abord de charger le modèle s'il existe déjà
+
         model_filename = f"{model_name.lower().replace(' ', '_')}_model.joblib"
+        # if model already exists, load it and print its metrics
         try:
             model = load_model(model_filename)
-            print(f"Le modèle '{model_name}' a été chargé depuis le disque. Skipping training.")
-            # Si chargé, on peut (optionnellement) refaire l'évaluation sur X_val
-            # pour avoir les métriques affichées
+            print(f"Le modèle '{model_name}' existe déjà")
+
             predictions_val = model.predict(x_val)
             probabilities_val = model.predict_proba(x_val)[:, 1]
             metrics = {
@@ -40,7 +38,7 @@ def main():
             print_metrics(model_name, metrics)
 
         except FileNotFoundError:
-            # Si le modèle n'existe pas, l'entraîner
+            # If it does not exist, train the model
             model, metrics = train_model(model_name, x_train_resampled, y_train_resampled, x_val, y_val)
             save_model(model, model_filename)
             print_metrics(model_name, metrics)
